@@ -1,5 +1,5 @@
 from optparse import OptionParser
-from PrototypeNCATPlotAnalysisLib_V18 import *
+from PlotAnalysisLib import *
 
 # Notes: There could be issues if the times to be analyzed overlap themselves
 
