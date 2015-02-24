@@ -1,6 +1,6 @@
 from optparse import OptionParser
 #from PrototypeNCATPlotAnalysisLib_V18 import *
-import NCATPlotDisplayPageLib_V4 as ndpage
+import DisplayPageLib as ndpage
 import os
 
 

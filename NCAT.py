@@ -1,5 +1,6 @@
 from optparse import OptionParser
-from PrototypeNCATLib_V7 import *
+import os
+from NCATLib import *
 
 # command line options
 parser = OptionParser()
@@ -48,7 +49,8 @@ GPS_upper = 1200000000
 blrmsExc = "/home/quitzow/newBLRMS_9_19_2014/blrms2frame"
 
     # python script path
-pythonScript = "/home/vincent.roma/public_html/upconversionCode/prototypeNCAT6/PrototypeNCATPlotAnalysis_V16.py"
+ncatPath = os.path.dirname(os.path.realpath(__file__))
+pythonScript = ncatPath + "/PlotAnalysis.py"
 #pythonScript = "/home/vincent.roma/public_html/upconversionCode/prototypeNCAT6/testScript"
 # ULNATPlotAnalysis path
     # shell path

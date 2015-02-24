@@ -7,7 +7,7 @@ import matplotlib as mpl
 mpl.use('Agg')
 import matplotlib.pyplot as plt
 from math import ceil, log10, floor
-import NCATPlotDisplayPageLib_V4 as ndpage
+import DisplayPageLib as ndpage
 
 # Notes: There could be issues if the times to be analyzed overlap themselves
 
@@ -19,17 +19,17 @@ def avg(data):
     else:
         return float(sum(data)) / len(data)
 
-def testRank(slope, intercept, x_min, x_max, y_min, y_max):
-    if slope <= 0:
-        return 1
-    dX = x_max - x_min
-    rise = slope * dX
-    dY = y_max - y_min
-    riseFraction = rise / dY
-    rank = 1 - riseFraction
-    print('Rise = ' + str(rise))
-    print('dY = ' + str(dY))
-    print('Rise Fraction = ' + str(riseFraction))
+def testRank(slope, intercept, x_data, y_data, x_min, x_max, y_min, y_max):
+    if slope < 0:
+        return 0
+    high_thresh = 1.2 * 10**-43
+    high_float = (high_thresh - intercept) / slope
+    total = 0
+    for i in range(len(x_data)):
+        if x_data[i] >= high_float and y_data[i] >= high_thresh:
+            total += y_data[i]
+            #total += 1
+    rank = (total / len(x_data)) * -1
     return rank
 
 def student_T_var(bin):
@@ -273,8 +273,8 @@ def find_minimal_bound(x_data, y_data, anChan, secChan, x_min, x_max, y_min, y_m
             minList[1].append(step_val)'''
 
     x_bins, y_bins = fill_bins(x_data, y_data, number_bins)
-    x_max = max(x_data)
-    x_min = min(x_data)
+    #x_max = max(x_data)
+    #x_min = min(x_data)
     domain = x_max - x_min
     interval_width = domain / float(number_bins)
     new_x = [x_min + (i + 1) * interval_width - interval_width / 2 for i in range(number_bins) if len(y_bins[i]) > 0]
@@ -291,7 +291,7 @@ def find_minimal_bound(x_data, y_data, anChan, secChan, x_min, x_max, y_min, y_m
 
     slope, intercept, reduced_X2, p_value, sigmaSlope, sigmaIntercept = chiSqrdFit(new_x, new_y, sigmas)
     std_err = [sigmaSlope, sigmaIntercept] 
-    p_value = testRank(slope, intercept, x_min, x_max, y_min, y_max)
+    p_value = testRank(slope, intercept, x_data, y_data, x_min, x_max, y_min, y_max)
     print("Minimal Bound p = " + str(p_value))
 
     '''slope, intercept, r_value, p_value, std_err = \
@@ -464,12 +464,16 @@ def vsPlot(analysisChannel, secondaryChannel, channelDataDictionary, plotDir, co
     precision = 3
 ####
 ####
-    plt.plot(line[0], line[1], 'g', label="Linear Fit\nslope = " + rounding(slope,precision) + "\np = " + rounding(p_value,precision) + "\nr^2 = " + str(rounding(r_value**2,precision)),alpha=0.5)
+    #plt.axvline(x=200,color='g')
+    #plt.axhline(y=1.2 * 10**-43,color='g')
+    #LIIIIIINNNEEEEEAAAARRRRRRR FIT
+    #plt.plot(line[0], line[1], 'g', label="Linear Fit\nslope = " + rounding(slope,precision) + "\np = " + rounding(p_value,precision) + "\nr^2 = " + str(rounding(r_value**2,precision)),alpha=0.5)
     # minimal bound line
     plt.plot(minimalBoundLine[0], minimalBoundLine[1], 'r', label="Minimal Bound\nslope = " + rounding(minimalBoundData[2],precision) + ' +- ' + rounding(minimalBoundData[6][0],precision) + "\np = " + rounding(minimalBoundData[5],precision) + "\nReduced X^2 = " + rounding(minimalBoundData[4],precision),alpha=0.5)
     # minimal bound data
     #plt.plot(minimalBoundData[7][0], minimalBoundData[7][1], 'r.')#, label = "test")
-    plt.errorbar(minimalBoundData[7][0], minimalBoundData[7][1], yerr = minimalBoundData[7][2], fmt = 'ro', mfc = 'red', mec = 'red', ecolor = 'red')#, label = "test")
+    #ERROR BARS
+    #plt.errorbar(minimalBoundData[7][0], minimalBoundData[7][1], yerr = minimalBoundData[7][2], fmt = 'ro', mfc = 'red', mec = 'red', ecolor = 'red')#, label = "test")
     # 2 Sigma Line
     #print("sigma debug")
     #print(sigmaLine2[0])
@@ -487,8 +491,10 @@ def vsPlot(analysisChannel, secondaryChannel, channelDataDictionary, plotDir, co
     if command_args.yMaxGen:
         if command_args.yMaxGen.upper() == "L":
             stdX = stdDev(x_sqrd)
+            stdY = stdDev(y_sqrd)
             x_avg = avg(x_sqrd)
-            x_low = max(xMin, x_avg - 3 * stdX, 0)
+            y_avg = avg(y_sqrd)
+            x_low = max(xMin, x_avg - 2 * stdX, 0)
             x_high = min(xMax, x_avg + 3 * stdX)
             #x_low = xMin
             #x_high = xMax
@@ -506,14 +512,14 @@ def vsPlot(analysisChannel, secondaryChannel, channelDataDictionary, plotDir, co
             yMax = max(yMinMinimal, yMaxMinimal)
             deltaY = yMax - yMin
             
-
             if yDataMax > yMax:
                 yMax = min(3 * deltaY + yMin, yDataMax)
-            #yMax = min(yMax, mean + 2 * s_dev)         
+            yMax = max(yMax, y_avg)         
 
             plt.xlim([x_low, x_high])
 
             plt.ylim([yMin, yMax])
+            #plt.ylim([yMin, 50 * 10**-43])
 
             #plt.ylim([xMin * slope + intercept, xMax * slope + intercept])
         else:
